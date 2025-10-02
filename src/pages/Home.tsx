@@ -3,7 +3,7 @@ import { CategoryGrid } from '../components/CategoryGrid';
 import { ArrowRight, Zap, Shield, Truck } from 'lucide-react';
 
 interface HomeProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, productId?: string) => void;
 }
 
 export const Home: React.FC<HomeProps> = ({ onNavigate }) => {

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 interface LoginProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, productId?: string) => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
@@ -21,8 +21,10 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
 
     try {
       await signIn(email, password);
+      console.log('✅ Login successful, redirecting to home');
       onNavigate('home');
     } catch (error: any) {
+      console.error('❌ Login failed:', error);
       setError(error.message || 'Failed to sign in');
     } finally {
       setLoading(false);

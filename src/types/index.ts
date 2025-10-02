@@ -4,6 +4,7 @@ export interface User {
   full_name: string;
   avatar_url?: string;
   created_at: string;
+  role?: 'USER' | 'ADMIN';
 }
 
 export interface CategoryItem {
@@ -13,6 +14,12 @@ export interface CategoryItem {
   originalPrice?: number;
   image: string;
   category: 'women' | 'men' | 'accessories' | 'sale' | 'gift-card';
+  description?: string;
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+  features?: string[];
+  images?: string[];
 }
 
 export interface AuthContextType {
@@ -21,6 +28,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
 export interface CartContextType {

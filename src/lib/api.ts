@@ -1,9 +1,9 @@
-// API configuration and utilities for Java backend integration
+// Enhanced API configuration for complete backend integration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-java-backend.herokuapp.com/api' 
+  ? 'https://your-backend-domain.com/api' 
   : 'http://localhost:8080/api';
 
-// API client with authentication
+// Enhanced API client with comprehensive error handling
 class ApiClient {
   private baseURL: string;
   private token: string | null = null;
@@ -26,92 +26,184 @@ class ApiClient {
   }
 
   private async handleResponse(response: Response) {
+    const contentType = response.headers.get('content-type');
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      console.error('API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data
+      });
+      throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
     }
     
     return data;
   }
 
   async get(endpoint: string) {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    console.log(`🔄 GET ${this.baseURL}${endpoint}`);
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      
+      const data = await this.handleResponse(response);
+      console.log(`✅ GET ${endpoint} success:`, data);
+      return data;
+    } catch (error) {
+      console.error(`❌ GET ${endpoint} failed:`, error);
+      throw error;
+    }
   }
 
   async post(endpoint: string, body: any) {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(body),
-    });
-    
-    return this.handleResponse(response);
+    console.log(`🔄 POST ${this.baseURL}${endpoint}`, body);
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      
+      const data = await this.handleResponse(response);
+      console.log(`✅ POST ${endpoint} success:`, data);
+      return data;
+    } catch (error) {
+      console.error(`❌ POST ${endpoint} failed:`, error);
+      throw error;
+    }
   }
 
   async put(endpoint: string, body: any) {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'PUT',
-      headers: this.getHeaders(),
-      body: JSON.stringify(body),
-    });
-    
-    return this.handleResponse(response);
+    console.log(`🔄 PUT ${this.baseURL}${endpoint}`, body);
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      
+      const data = await this.handleResponse(response);
+      console.log(`✅ PUT ${endpoint} success:`, data);
+      return data;
+    } catch (error) {
+      console.error(`❌ PUT ${endpoint} failed:`, error);
+      throw error;
+    }
   }
 
   async delete(endpoint: string) {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    console.log(`🔄 DELETE ${this.baseURL}${endpoint}`);
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'DELETE',
+        headers: this.getHeaders(),
+      });
+      
+      const data = await this.handleResponse(response);
+      console.log(`✅ DELETE ${endpoint} success:`, data);
+      return data;
+    } catch (error) {
+      console.error(`❌ DELETE ${endpoint} failed:`, error);
+      throw error;
+    }
   }
 
   setToken(token: string | null) {
     this.token = token;
     if (token) {
       localStorage.setItem('auth_token', token);
+      console.log('🔐 Token stored successfully');
     } else {
       localStorage.removeItem('auth_token');
+      console.log('🔓 Token removed');
     }
   }
 
   getToken(): string | null {
     return this.token;
   }
+
+  // Test backend connection
+  async testConnection() {
+    try {
+      const response = await this.get('/test/health');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Test database connection
+  async testDatabase() {
+    try {
+      const response = await this.get('/test/db');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // Create API client instance
 export const apiClient = new ApiClient(API_BASE_URL);
 
-// Authentication API
+// Enhanced Authentication API
 export const authAPI = {
   signIn: async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/signin', { email, password });
-    if (response.success && response.token) {
-      apiClient.setToken(response.token);
+    console.log('🔐 Attempting sign in for:', email);
+    try {
+      const response = await apiClient.post('/auth/signin', { email, password });
+      
+      if (response.success && response.token) {
+        apiClient.setToken(response.token);
+        console.log('✅ Sign in successful');
+        return response;
+      } else {
+        throw new Error(response.message || 'Sign in failed');
+      }
+    } catch (error) {
+      console.error('❌ Sign in failed:', error);
+      throw error;
     }
-    return response;
   },
 
   signUp: async (email: string, password: string, fullName: string) => {
-    const response = await apiClient.post('/auth/signup', { email, password, fullName });
-    if (response.success && response.token) {
-      apiClient.setToken(response.token);
+    console.log('📝 Attempting sign up for:', email);
+    try {
+      const response = await apiClient.post('/auth/signup', { email, password, fullName });
+      
+      if (response.success && response.token) {
+        apiClient.setToken(response.token);
+        console.log('✅ Sign up successful');
+        return response;
+      } else {
+        throw new Error(response.message || 'Sign up failed');
+      }
+    } catch (error) {
+      console.error('❌ Sign up failed:', error);
+      throw error;
     }
-    return response;
   },
 
   signOut: async () => {
-    const response = await apiClient.post('/auth/signout', {});
-    apiClient.setToken(null);
-    return response;
+    console.log('🔓 Attempting sign out');
+    try {
+      await apiClient.post('/auth/signout', {});
+      apiClient.setToken(null);
+      console.log('✅ Sign out successful');
+    } catch (error) {
+      console.error('❌ Sign out failed:', error);
+      // Clear token anyway
+      apiClient.setToken(null);
+    }
   },
 
   validateToken: async () => {
@@ -119,11 +211,29 @@ export const authAPI = {
     if (!token) {
       throw new Error('No token found');
     }
-    return await apiClient.get('/auth/validate');
+    
+    console.log('🔍 Validating token');
+    try {
+      const response = await apiClient.get('/auth/validate');
+      console.log('✅ Token validation successful');
+      return response;
+    } catch (error) {
+      console.error('❌ Token validation failed:', error);
+      apiClient.setToken(null);
+      throw error;
+    }
   },
 
   getCurrentUser: async () => {
-    return await apiClient.get('/auth/me');
+    console.log('👤 Getting current user');
+    try {
+      const response = await apiClient.get('/auth/me');
+      console.log('✅ Got current user');
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to get current user:', error);
+      throw error;
+    }
   },
 };
 

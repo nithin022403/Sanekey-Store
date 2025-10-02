@@ -5,20 +5,22 @@ import { useCart } from '../context/CartContext';
 
 interface NavbarProps {
   currentPage: string;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, productId?: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAuthenticated } = useAuth();
   const { itemCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
+    console.log('🔓 Attempting to sign out');
     try {
       await signOut();
+      console.log('✅ Sign out successful');
       onNavigate('home');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('❌ Sign out error:', error);
     }
   };
 

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 
 interface CartProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, productId?: string) => void;
 }
 
 export const Cart: React.FC<CartProps> = ({ onNavigate }) => {

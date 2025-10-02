@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
 interface RegisterProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, productId?: string) => void;
 }
 
 export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
@@ -45,8 +45,10 @@ export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
 
     try {
       await signUp(formData.email, formData.password, formData.fullName);
+      console.log('✅ Registration successful, redirecting to home');
       onNavigate('home');
     } catch (error: any) {
+      console.error('❌ Registration failed:', error);
       setError(error.message || 'Failed to create account');
     } finally {
       setLoading(false);

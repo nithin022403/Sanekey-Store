@@ -5,7 +5,7 @@ import { paymentAPI } from '../lib/api';
 import { CreditCard, Wallet, ShoppingBag, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface CheckoutProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, productId?: string) => void;
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ onNavigate }) => {
