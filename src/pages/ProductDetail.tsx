@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Star, Heart, Share2, ShoppingCart, Plus, Minus, Check, Truck, RotateCcw, Shield } from 'lucide-react';
+import { ArrowLeft, Star, Heart, Share2, ShoppingCart, Plus, Minus, Check, Truck, RotateCcw, Shield, Eye } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { CategoryItem } from '../types';
+import { Product360Viewer } from '../components/Product360Viewer';
+import { ProductReviews } from '../components/ProductReviews';
 
 interface ProductDetailProps {
   product: CategoryItem;
@@ -14,8 +16,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | '360' | 'reviews'>('details');
 
-  // Enhanced product data with defaults
+  // Enhanced product data with 360° images and reviews
   const productData = {
     ...product,
     description: product.description || `Experience the premium quality of ${product.name}. Crafted with attention to detail and designed for modern lifestyle.`,
@@ -34,6 +37,53 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    images360: product.images360 || [
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    reviews: product.reviews || [
+      {
+        id: '1',
+        userId: 'user1',
+        userName: 'Sarah Johnson',
+        userAvatar: 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=100',
+        rating: 5,
+        title: 'Absolutely love this product!',
+        comment: 'The quality is outstanding and it fits perfectly. Highly recommend to anyone looking for premium quality.',
+        date: '2024-01-15',
+        verified: true,
+        helpful: 12,
+        images: ['https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=200']
+      },
+      {
+        id: '2',
+        userId: 'user2',
+        userName: 'Mike Chen',
+        rating: 4,
+        title: 'Great value for money',
+        comment: 'Good quality product, delivery was fast. Only minor issue was the packaging could be better.',
+        date: '2024-01-10',
+        verified: true,
+        helpful: 8
+      },
+      {
+        id: '3',
+        userId: 'user3',
+        userName: 'Emma Wilson',
+        rating: 5,
+        title: 'Perfect!',
+        comment: 'Exactly what I was looking for. The material feels premium and the design is beautiful.',
+        date: '2024-01-05',
+        verified: true,
+        helpful: 15
+      }
     ]
   };
 
@@ -79,38 +129,73 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
           Back to Products
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
           {/* Product Images */}
           <div className="space-y-4">
-            {/* Main Image */}
-            <div className="aspect-square bg-white rounded-lg overflow-hidden shadow-lg">
-              <img
-                src={productData.images[selectedImage]}
-                alt={productData.name}
-                className="w-full h-full object-cover"
-              />
+            {/* Tab Navigation */}
+            <div className="flex space-x-4 mb-4">
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'details'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Gallery
+              </button>
+              <button
+                onClick={() => setActiveTab('360')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                  activeTab === '360'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                <Eye className="h-4 w-4" />
+                <span>360° View</span>
+              </button>
             </div>
 
-            {/* Thumbnail Images */}
-            <div className="grid grid-cols-4 gap-4">
-              {productData.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === index
-                      ? 'border-indigo-600 ring-2 ring-indigo-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
+            {/* Image Display */}
+            {activeTab === 'details' ? (
+              <>
+                {/* Main Image */}
+                <div className="aspect-square bg-white rounded-lg overflow-hidden shadow-lg">
                   <img
-                    src={image}
-                    alt={`${productData.name} ${index + 1}`}
+                    src={productData.images[selectedImage]}
+                    alt={productData.name}
                     className="w-full h-full object-cover"
                   />
-                </button>
-              ))}
-            </div>
+                </div>
+
+                {/* Thumbnail Images */}
+                <div className="grid grid-cols-4 gap-4">
+                  {productData.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === index
+                          ? 'border-indigo-600 ring-2 ring-indigo-200'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${productData.name} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <Product360Viewer
+                images={productData.images360}
+                productName={productData.name}
+              />
+            )}
           </div>
 
           {/* Product Information */}
@@ -301,6 +386,27 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12">
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className="text-2xl font-bold text-gray-900 mb-6 hover:text-indigo-600 transition-colors"
+          >
+            Customer Reviews
+          </button>
+          
+          <ProductReviews
+            reviews={productData.reviews}
+            productId={productData.id}
+            averageRating={productData.rating}
+            totalReviews={productData.reviewCount}
+            onAddReview={(review) => {
+              // In a real app, this would make an API call
+              console.log('New review:', review);
+            }}
+          />
         </div>
       </div>
     </div>

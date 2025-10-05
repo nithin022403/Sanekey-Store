@@ -32,6 +32,42 @@ const mockProducts: { [key: string]: CategoryItem } = {
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    images360: [
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    reviews: [
+      {
+        id: '1',
+        userId: 'user1',
+        userName: 'Sarah Johnson',
+        userAvatar: 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=100',
+        rating: 5,
+        title: 'Absolutely love this scarf!',
+        comment: 'The silk quality is outstanding and it feels so luxurious. Perfect for both casual and formal occasions.',
+        date: '2024-01-15',
+        verified: true,
+        helpful: 12,
+        images: ['https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=200']
+      },
+      {
+        id: '2',
+        userId: 'user2',
+        userName: 'Emma Wilson',
+        rating: 4,
+        title: 'Beautiful design',
+        comment: 'Love the patterns and colors. Great quality for the price.',
+        date: '2024-01-10',
+        verified: true,
+        helpful: 8
+      }
     ]
   },
   // Add more products as needed...

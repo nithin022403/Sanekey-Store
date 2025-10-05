@@ -20,6 +20,22 @@ export interface CategoryItem {
   inStock?: boolean;
   features?: string[];
   images?: string[];
+  images360?: string[];
+  reviews?: ProductReview[];
+}
+
+export interface ProductReview {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  title: string;
+  comment: string;
+  date: string;
+  verified: boolean;
+  helpful: number;
+  images?: string[];
 }
 
 export interface AuthContextType {
