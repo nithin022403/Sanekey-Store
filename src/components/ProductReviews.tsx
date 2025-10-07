@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, ThumbsUp, Camera, CheckCircle, Filter, ChevronDown, Edit, Trash2 } from 'lucide-react';
+import { Star, ThumbsUp, Camera, CheckCircle, Filter, ChevronDown, CreditCard as Edit, Trash2 } from 'lucide-react';
 import { ProductReview } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { reviewAPI } from '../lib/api';
