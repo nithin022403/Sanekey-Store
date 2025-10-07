@@ -398,13 +398,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
           </button>
           
           <ProductReviews
-            reviews={productData.reviews}
             productId={productData.id}
-            averageRating={productData.rating}
-            totalReviews={productData.reviewCount}
-            onAddReview={(review) => {
-              // In a real app, this would make an API call
-              console.log('New review:', review);
+            onReviewsUpdate={() => {
+              // Refresh product data when reviews are updated
+              console.log('Reviews updated for product:', productData.id);
             }}
           />
         </div>
