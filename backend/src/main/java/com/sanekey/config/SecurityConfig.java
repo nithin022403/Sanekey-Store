@@ -63,11 +63,7 @@ public class SecurityConfig {
             .authorizeHttpRequests()
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/auth/signin").permitAll()
-                .requestMatchers("/api/auth/signup").permitAll()
-                .requestMatchers("/api/auth/signout").permitAll()
-                .requestMatchers("/api/auth/validate").permitAll()
-                .requestMatchers("/api/auth/me").permitAll()
+                .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 // Admin endpoints
@@ -80,6 +76,7 @@ public class SecurityConfig {
                 // User endpoints
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/payments/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/reviews/**").hasAnyRole("USER", "ADMIN")
                 // All other requests need authentication
                 .anyRequest().authenticated();
         

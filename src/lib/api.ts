@@ -11,11 +11,13 @@ class ApiClient {
   constructor(baseURL: string) {
     this.baseURL = baseURL;
     this.token = localStorage.getItem('auth_token');
+    console.log('🔧 API Client initialized with base URL:', baseURL);
   }
 
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
 
     if (this.token) {
@@ -26,16 +28,20 @@ class ApiClient {
   }
 
   private async handleResponse(response: Response) {
+    console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
+    
     const contentType = response.headers.get('content-type');
     
     if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Non-JSON response:', text);
       throw new Error(`Server returned ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('API Error:', {
+      console.error('❌ API Error:', {
         status: response.status,
         statusText: response.statusText,
         data
@@ -47,11 +53,14 @@ class ApiClient {
   }
 
   async get(endpoint: string) {
-    console.log(`🔄 GET ${this.baseURL}${endpoint}`);
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`🔄 GET ${url}`);
+    
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders(),
+        mode: 'cors',
       });
       
       const data = await this.handleResponse(response);
@@ -64,12 +73,15 @@ class ApiClient {
   }
 
   async post(endpoint: string, body: any) {
-    console.log(`🔄 POST ${this.baseURL}${endpoint}`, body);
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`🔄 POST ${url}`, body);
+    
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(body),
+        mode: 'cors',
       });
       
       const data = await this.handleResponse(response);
@@ -82,12 +94,15 @@ class ApiClient {
   }
 
   async put(endpoint: string, body: any) {
-    console.log(`🔄 PUT ${this.baseURL}${endpoint}`, body);
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`🔄 PUT ${url}`, body);
+    
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: JSON.stringify(body),
+        mode: 'cors',
       });
       
       const data = await this.handleResponse(response);
@@ -100,11 +115,14 @@ class ApiClient {
   }
 
   async delete(endpoint: string) {
-    console.log(`🔄 DELETE ${this.baseURL}${endpoint}`);
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`🔄 DELETE ${url}`);
+    
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: this.getHeaders(),
+        mode: 'cors',
       });
       
       const data = await this.handleResponse(response);
@@ -134,9 +152,12 @@ class ApiClient {
   // Test backend connection
   async testConnection() {
     try {
+      console.log('🔍 Testing backend connection...');
       const response = await this.get('/test/health');
+      console.log('✅ Backend connection successful');
       return { success: true, data: response };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Backend connection failed:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -144,9 +165,12 @@ class ApiClient {
   // Test database connection
   async testDatabase() {
     try {
+      console.log('🔍 Testing database connection...');
       const response = await this.get('/test/db');
+      console.log('✅ Database connection successful');
       return { success: true, data: response };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Database connection failed:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -169,7 +193,7 @@ export const authAPI = {
       } else {
         throw new Error(response.message || 'Sign in failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Sign in failed:', error);
       throw error;
     }
@@ -187,7 +211,7 @@ export const authAPI = {
       } else {
         throw new Error(response.message || 'Sign up failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Sign up failed:', error);
       throw error;
     }

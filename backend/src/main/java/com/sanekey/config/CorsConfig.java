@@ -33,7 +33,8 @@ public class CorsConfig implements WebMvcConfigurer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        configuration.setAllowedOriginPatterns(Arrays.asList(
+        
+        configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:*",
             "https://localhost:*"
         ));
@@ -46,18 +47,21 @@ public class CorsConfig implements WebMvcConfigurer {
             "Authorization", "Content-Type", "X-Requested-With", 
             "Accept", "Origin", "Access-Control-Request-Method", 
             "Access-Control-Request-Headers"
-        ));
-        
-        configuration.setExposedHeaders(Arrays.asList(
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "https://localhost:5173",
+            "https://localhost:5174"
             "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"
+        
         ));
         
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
         
         return source;
-    }
+        source.registerCorsConfiguration("/api/**", configuration);
 }
