@@ -1,33 +1,164 @@
-import React, { useState } from 'react';
-import { Star, ThumbsUp, Camera, CheckCircle, Filter, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, ThumbsUp, Camera, CheckCircle, Filter, ChevronDown, Edit, Trash2 } from 'lucide-react';
 import { ProductReview } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { reviewAPI } from '../lib/api';
 
 interface ProductReviewsProps {
-  reviews: ProductReview[];
   productId: string;
-  averageRating: number;
-  totalReviews: number;
-  onAddReview?: (review: Omit<ProductReview, 'id' | 'date' | 'helpful'>) => void;
+  onReviewsUpdate?: () => void;
 }
 
 export const ProductReviews: React.FC<ProductReviewsProps> = ({
-  reviews,
   productId,
-  averageRating,
-  totalReviews,
-  onAddReview
+  onReviewsUpdate
 }) => {
   const { user } = useAuth();
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [ratingSummary, setRatingSummary] = useState<any>(null);
   const [showWriteReview, setShowWriteReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'helpful' | 'rating'>('newest');
+  const [loading, setLoading] = useState(true);
+  const [editingReview, setEditingReview] = useState<ProductReview | null>(null);
   const [newReview, setNewReview] = useState({
     rating: 5,
     title: '',
     comment: '',
     images: [] as string[]
   });
+
+  useEffect(() => {
+    loadReviews();
+    loadRatingSummary();
+    if (user) {
+      checkCanReview();
+    }
+  }, [productId, user, filterRating]);
+
+  const loadReviews = async () => {
+    try {
+      const response = await reviewAPI.getProductReviews(productId, filterRating || undefined);
+      if (response.success) {
+        let sortedReviews = [...response.reviews];
+        
+        // Sort reviews
+        sortedReviews.sort((a, b) => {
+          switch (sortBy) {
+            case 'newest':
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            case 'oldest':
+              return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            case 'helpful':
+              return b.helpfulCount - a.helpfulCount;
+            case 'rating':
+              return b.rating - a.rating;
+            default:
+              return 0;
+          }
+        });
+        
+        setReviews(sortedReviews);
+      }
+    } catch (error) {
+      console.error('Failed to load reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRatingSummary = async () => {
+    try {
+      const response = await reviewAPI.getProductRatingSummary(productId);
+      if (response.success) {
+        setRatingSummary(response.summary);
+      }
+    } catch (error) {
+      console.error('Failed to load rating summary:', error);
+    }
+  };
+
+  const checkCanReview = async () => {
+    try {
+      const response = await reviewAPI.canUserReviewProduct(productId);
+      if (response.success) {
+        setCanReview(response.canReview);
+      }
+    } catch (error) {
+      console.error('Failed to check review eligibility:', error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user) return;
+
+    try {
+      if (editingReview) {
+        await reviewAPI.updateReview(
+          parseInt(editingReview.id),
+          newReview.rating,
+          newReview.title,
+          newReview.comment,
+          newReview.images
+        );
+        setEditingReview(null);
+      } else {
+        await reviewAPI.createReview(
+          productId,
+          newReview.rating,
+          newReview.title,
+          newReview.comment,
+          newReview.images
+        );
+      }
+
+      setNewReview({ rating: 5, title: '', comment: '', images: [] });
+      setShowWriteReview(false);
+      loadReviews();
+      loadRatingSummary();
+      checkCanReview();
+      onReviewsUpdate?.();
+    } catch (error: any) {
+      console.error('Failed to submit review:', error);
+      alert(error.message || 'Failed to submit review');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+
+    try {
+      await reviewAPI.deleteReview(parseInt(reviewId));
+      loadReviews();
+      loadRatingSummary();
+      checkCanReview();
+      onReviewsUpdate?.();
+    } catch (error: any) {
+      console.error('Failed to delete review:', error);
+      alert(error.message || 'Failed to delete review');
+    }
+  };
+
+  const handleEditReview = (review: ProductReview) => {
+    setEditingReview(review);
+    setNewReview({
+      rating: review.rating,
+      title: review.title,
+      comment: review.comment,
+      images: review.images || []
+    });
+    setShowWriteReview(true);
+  };
+
+  const handleMarkHelpful = async (reviewId: string) => {
+    try {
+      await reviewAPI.markReviewAsHelpful(parseInt(reviewId));
+      loadReviews();
+    } catch (error) {
+      console.error('Failed to mark review as helpful:', error);
+    }
+  };
 
   const renderStars = (rating: number, size: 'sm' | 'md' | 'lg' = 'md') => {
     const sizeClasses = {
@@ -51,106 +182,84 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   };
 
   const getRatingDistribution = () => {
-    const distribution = [0, 0, 0, 0, 0];
-    reviews.forEach(review => {
-      distribution[review.rating - 1]++;
-    });
-    return distribution.reverse(); // 5 stars first
+    if (!ratingSummary?.ratingDistribution) return [];
+    
+    const distribution = [];
+    for (let i = 5; i >= 1; i--) {
+      distribution.push({
+        rating: i,
+        count: ratingSummary.ratingDistribution[i] || 0
+      });
+    }
+    return distribution;
   };
 
-  const filteredAndSortedReviews = reviews
-    .filter(review => filterRating === null || review.rating === filterRating)
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        case 'oldest':
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case 'helpful':
-          return b.helpful - a.helpful;
-        case 'rating':
-          return b.rating - a.rating;
-        default:
-          return 0;
-      }
-    });
-
-  const handleSubmitReview = () => {
-    if (!user || !onAddReview) return;
-
-    const review: Omit<ProductReview, 'id' | 'date' | 'helpful'> = {
-      userId: user.id,
-      userName: user.full_name,
-      userAvatar: user.avatar_url,
-      rating: newReview.rating,
-      title: newReview.title,
-      comment: newReview.comment,
-      verified: true,
-      images: newReview.images
-    };
-
-    onAddReview(review);
-    setNewReview({ rating: 5, title: '', comment: '', images: [] });
-    setShowWriteReview(false);
-  };
-
-  const ratingDistribution = getRatingDistribution();
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Rating Summary */}
-      <div className="bg-white rounded-lg p-6 shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Overall Rating */}
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-900 mb-2">
-              {averageRating.toFixed(1)}
+      {ratingSummary && (
+        <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Overall Rating */}
+            <div className="text-center">
+              <div className="text-4xl font-bold text-gray-900 mb-2">
+                {ratingSummary.averageRating.toFixed(1)}
+              </div>
+              <div className="flex items-center justify-center mb-2">
+                {renderStars(ratingSummary.averageRating, 'lg')}
+              </div>
+              <p className="text-gray-600">Based on {ratingSummary.totalReviews} reviews</p>
             </div>
-            <div className="flex items-center justify-center mb-2">
-              {renderStars(averageRating, 'lg')}
-            </div>
-            <p className="text-gray-600">Based on {totalReviews} reviews</p>
-          </div>
 
-          {/* Rating Distribution */}
-          <div className="space-y-2">
-            {ratingDistribution.map((count, index) => {
-              const rating = 5 - index;
-              const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-              
-              return (
-                <div key={rating} className="flex items-center space-x-2">
-                  <span className="text-sm font-medium w-8">{rating}★</span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${percentage}%` }}
-                    />
+            {/* Rating Distribution */}
+            <div className="space-y-2">
+              {getRatingDistribution().map(({ rating, count }) => {
+                const percentage = ratingSummary.totalReviews > 0 ? (count / ratingSummary.totalReviews) * 100 : 0;
+                
+                return (
+                  <div key={rating} className="flex items-center space-x-2">
+                    <span className="text-sm font-medium w-8">{rating}★</span>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600 w-8">{count}</span>
                   </div>
-                  <span className="text-sm text-gray-600 w-8">{count}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Write Review Button */}
-        {user && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setShowWriteReview(!showWriteReview)}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Write a Review
-            </button>
-          </div>
-        )}
-      </div>
+          {/* Write Review Button */}
+          {user && canReview && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setShowWriteReview(!showWriteReview)}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Write a Review
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Write Review Form */}
       {showWriteReview && user && (
         <div className="bg-white rounded-lg p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Write Your Review</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {editingReview ? 'Edit Your Review' : 'Write Your Review'}
+          </h3>
           
           <div className="space-y-4">
             {/* Rating */}
@@ -212,10 +321,14 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
                 disabled={!newReview.title || !newReview.comment}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Submit Review
+                {editingReview ? 'Update Review' : 'Submit Review'}
               </button>
               <button
-                onClick={() => setShowWriteReview(false)}
+                onClick={() => {
+                  setShowWriteReview(false);
+                  setEditingReview(null);
+                  setNewReview({ rating: 5, title: '', comment: '', images: [] });
+                }}
                 className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancel
@@ -262,44 +375,62 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
         </div>
 
         <p className="text-sm text-gray-600">
-          Showing {filteredAndSortedReviews.length} of {reviews.length} reviews
+          Showing {reviews.length} reviews
         </p>
       </div>
 
       {/* Reviews List */}
       <div className="space-y-4">
-        {filteredAndSortedReviews.map((review) => (
+        {reviews.map((review) => (
           <div key={review.id} className="bg-white rounded-lg p-6 shadow-sm border">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                  {review.userAvatar ? (
+                  {review.user.avatarUrl ? (
                     <img
-                      src={review.userAvatar}
-                      alt={review.userName}
+                      src={review.user.avatarUrl}
+                      alt={review.user.fullName}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     <span className="text-gray-600 font-medium">
-                      {review.userName.charAt(0).toUpperCase()}
+                      {review.user.fullName.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h4 className="font-medium text-gray-900">{review.userName}</h4>
-                    {review.verified && (
+                    <h4 className="font-medium text-gray-900">{review.user.fullName}</h4>
+                    {review.isVerified && (
                       <CheckCircle className="h-4 w-4 text-green-500" title="Verified Purchase" />
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="flex">{renderStars(review.rating, 'sm')}</div>
                     <span className="text-sm text-gray-500">
-                      {new Date(review.date).toLocaleDateString()}
+                      {new Date(review.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* Edit/Delete buttons for own reviews */}
+              {user && user.id === review.user.id.toString() && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleEditReview(review)}
+                    className="text-gray-400 hover:text-indigo-600 transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteReview(review.id)}
+                    className="text-gray-400 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <h5 className="font-medium text-gray-900 mb-2">{review.title}</h5>
@@ -321,17 +452,22 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
             {/* Helpful Button */}
             <div className="flex items-center space-x-4">
-              <button className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors">
+              <button 
+                onClick={() => handleMarkHelpful(review.id)}
+                className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors"
+              >
                 <ThumbsUp className="h-4 w-4" />
-                <span className="text-sm">Helpful ({review.helpful})</span>
+                <span className="text-sm">Helpful ({review.helpfulCount})</span>
               </button>
             </div>
           </div>
         ))}
 
-        {filteredAndSortedReviews.length === 0 && (
+        {reviews.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">No reviews match your current filters.</p>
+            <p className="text-gray-500">
+              {filterRating ? 'No reviews match your current filters.' : 'No reviews yet. Be the first to review this product!'}
+            </p>
           </div>
         )}
       </div>

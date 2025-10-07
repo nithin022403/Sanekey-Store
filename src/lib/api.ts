@@ -283,4 +283,40 @@ export const paymentAPI = {
   },
 };
 
+// Product Review API
+export const reviewAPI = {
+  createReview: async (productId: string, rating: number, title: string, comment: string, images?: string[]) => {
+    return await apiClient.post('/reviews', { productId, rating, title, comment, images });
+  },
+
+  updateReview: async (reviewId: number, rating: number, title: string, comment: string, images?: string[]) => {
+    return await apiClient.put(`/reviews/${reviewId}`, { rating, title, comment, images });
+  },
+
+  deleteReview: async (reviewId: number) => {
+    return await apiClient.delete(`/reviews/${reviewId}`);
+  },
+
+  getProductReviews: async (productId: string, rating?: number) => {
+    const params = rating ? `?rating=${rating}` : '';
+    return await apiClient.get(`/reviews/product/${productId}${params}`);
+  },
+
+  getProductRatingSummary: async (productId: string) => {
+    return await apiClient.get(`/reviews/product/${productId}/summary`);
+  },
+
+  markReviewAsHelpful: async (reviewId: number) => {
+    return await apiClient.post(`/reviews/${reviewId}/helpful`, {});
+  },
+
+  getUserReviews: async () => {
+    return await apiClient.get('/reviews/my-reviews');
+  },
+
+  canUserReviewProduct: async (productId: string) => {
+    return await apiClient.get(`/reviews/can-review/${productId}`);
+  },
+};
+
 export default apiClient;
