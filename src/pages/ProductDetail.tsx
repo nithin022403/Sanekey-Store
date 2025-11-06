@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Star, Heart, Share2, ShoppingCart, Plus, Minus, Check, Truck, RotateCcw, Shield, Eye } from 'lucide-react';
+import { ArrowLeft, Star, Heart, Share2, ShoppingCart, Plus, Minus, Check, Truck, RotateCcw, Shield, Eye, ZoomIn, ZoomOut } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { CategoryItem } from '../types';
 import { Product360Viewer } from '../components/Product360Viewer';
@@ -17,6 +17,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | '360' | 'reviews'>('details');
+  const [zoom, setZoom] = useState(1);
 
   // Enhanced product data with 360° images and reviews
   const productData = {
@@ -98,6 +99,23 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
     onNavigate('checkout');
   };
 
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(prev - 0.25, 1));
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    if (e.deltaY > 0) {
+      handleZoomOut();
+    } else {
+      handleZoomIn();
+    }
+  };
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -160,13 +178,53 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
             {/* Image Display */}
             {activeTab === 'details' ? (
               <>
-                {/* Main Image */}
-                <div className="aspect-square bg-white rounded-lg overflow-hidden shadow-lg">
-                  <img
-                    src={productData.images[selectedImage]}
-                    alt={productData.name}
-                    className="w-full h-full object-cover"
-                  />
+                {/* Main Image with Zoom */}
+                <div
+                  className="aspect-square bg-white rounded-lg overflow-hidden shadow-lg relative group"
+                  onWheel={handleWheel}
+                >
+                  <div className="w-full h-full flex items-center justify-center overflow-hidden bg-white">
+                    <img
+                      src={productData.images[selectedImage]}
+                      alt={productData.name}
+                      className="select-none transition-transform duration-300"
+                      style={{
+                        transform: `scale(${zoom})`,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </div>
+
+                  {/* Zoom Controls */}
+                  <div className="absolute top-4 left-4 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={handleZoomIn}
+                      className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors shadow-md"
+                      title="Zoom in (Scroll up)"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={handleZoomOut}
+                      className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50"
+                      disabled={zoom <= 1}
+                      title="Zoom out (Scroll down)"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </button>
+
+                    <div className="bg-blue-600 text-white px-3 py-1 rounded text-xs text-center shadow-md">
+                      {(zoom * 100).toFixed(0)}%
+                    </div>
+                  </div>
+
+                  {/* Zoom Hint */}
+                  <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                    Scroll to zoom
+                  </div>
                 </div>
 
                 {/* Thumbnail Images */}
@@ -174,10 +232,13 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
                   {productData.images.map((image, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedImage(index)}
+                      onClick={() => {
+                        setSelectedImage(index);
+                        setZoom(1);
+                      }}
                       className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all ${
                         selectedImage === index
-                          ? 'border-indigo-600 ring-2 ring-indigo-200'
+                          ? 'border-blue-600 ring-2 ring-blue-200'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
