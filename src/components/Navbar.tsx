@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingCart, User, Menu, X, Store } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { useCart } from '../context/CartContext';
 
 interface NavbarProps {
@@ -9,7 +9,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
-  const { user, signOut, isAuthenticated } = useAuth();
+  const { user, signOut, isAuthenticated } = useSupabaseAuth();
   const { itemCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

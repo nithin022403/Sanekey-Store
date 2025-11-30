@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 interface LoginProps {
@@ -7,7 +7,7 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
-  const { signIn } = useAuth();
+  const { signIn } = useSupabaseAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

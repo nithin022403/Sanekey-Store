@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, Camera, CheckCircle, Filter, ChevronDown, CreditCard as Edit, Trash2 } from 'lucide-react';
 import { ProductReview } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { reviewAPI } from '../lib/api';
+import { supabaseReviewAPI } from '../lib/supabase-api';
 
 interface ProductReviewsProps {
   productId: string;
@@ -39,11 +39,10 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
   const loadReviews = async () => {
     try {
-      const response = await reviewAPI.getProductReviews(productId, filterRating || undefined);
+      const response = await supabaseReviewAPI.getProductReviews(productId, filterRating || undefined);
       if (response.success) {
         let sortedReviews = [...response.reviews];
-        
-        // Sort reviews
+
         sortedReviews.sort((a, b) => {
           switch (sortBy) {
             case 'newest':
@@ -58,7 +57,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
               return 0;
           }
         });
-        
+
         setReviews(sortedReviews);
       }
     } catch (error) {
@@ -70,7 +69,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
   const loadRatingSummary = async () => {
     try {
-      const response = await reviewAPI.getProductRatingSummary(productId);
+      const response = await supabaseReviewAPI.getProductRatingSummary(productId);
       if (response.success) {
         setRatingSummary(response.summary);
       }
@@ -81,7 +80,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
   const checkCanReview = async () => {
     try {
-      const response = await reviewAPI.canUserReviewProduct(productId);
+      const response = await supabaseReviewAPI.canUserReviewProduct(productId);
       if (response.success) {
         setCanReview(response.canReview);
       }
@@ -95,8 +94,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
     try {
       if (editingReview) {
-        await reviewAPI.updateReview(
-          parseInt(editingReview.id),
+        await supabaseReviewAPI.updateReview(
+          editingReview.id,
           newReview.rating,
           newReview.title,
           newReview.comment,
@@ -104,7 +103,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
         );
         setEditingReview(null);
       } else {
-        await reviewAPI.createReview(
+        await supabaseReviewAPI.createReview(
           productId,
           newReview.rating,
           newReview.title,
@@ -129,7 +128,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
     if (!confirm('Are you sure you want to delete this review?')) return;
 
     try {
-      await reviewAPI.deleteReview(parseInt(reviewId));
+      await supabaseReviewAPI.deleteReview(reviewId);
       loadReviews();
       loadRatingSummary();
       checkCanReview();
@@ -153,7 +152,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
   const handleMarkHelpful = async (reviewId: string) => {
     try {
-      await reviewAPI.markReviewAsHelpful(parseInt(reviewId));
+      await supabaseReviewAPI.markReviewAsHelpful(reviewId);
       loadReviews();
     } catch (error) {
       console.error('Failed to mark review as helpful:', error);

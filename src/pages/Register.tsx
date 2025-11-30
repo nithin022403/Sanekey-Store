@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
 interface RegisterProps {
@@ -7,7 +7,7 @@ interface RegisterProps {
 }
 
 export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
-  const { signUp } = useAuth();
+  const { signUp } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',

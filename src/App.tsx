@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
@@ -109,7 +109,7 @@ function App() {
   };
 
   return (
-    <AuthProvider>
+    <SupabaseAuthProvider>
       <CartProvider>
         <div className="min-h-screen bg-gray-50">
           <Navbar currentPage={currentPage} onNavigate={handleNavigation} />
@@ -117,7 +117,7 @@ function App() {
           <TestConnection />
         </div>
       </CartProvider>
-    </AuthProvider>
+    </SupabaseAuthProvider>
   );
 }
 
