@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Star, Heart, Share2, ShoppingCart, Plus, Minus, Check, Truck, RotateCcw, Shield, Eye, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, Star, Heart, Share2, ShoppingCart, Plus, Minus, Check, Truck, RotateCcw, Shield, Eye, ZoomIn, ZoomOut, MapPin } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { CategoryItem } from '../types';
 import { Product360Viewer } from '../components/Product360Viewer';
@@ -10,6 +10,12 @@ interface ProductDetailProps {
   onNavigate: (page: string) => void;
 }
 
+interface ColorVariant {
+  name: string;
+  hex: string;
+  images: string[];
+}
+
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigate }) => {
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
@@ -18,8 +24,51 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
   const [isAdded, setIsAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | '360' | 'reviews'>('details');
   const [zoom, setZoom] = useState(1);
+  const [selectedColor, setSelectedColor] = useState(0);
 
-  // Enhanced product data with 360° images and reviews
+  const colorVariants: ColorVariant[] = [
+    {
+      name: 'Black',
+      hex: '#000000',
+      images: [
+        product.image,
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+      ]
+    },
+    {
+      name: 'Blue',
+      hex: '#0066CC',
+      images: [
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+      ]
+    },
+    {
+      name: 'Red',
+      hex: '#CC0000',
+      images: [
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+      ]
+    },
+    {
+      name: 'White',
+      hex: '#FFFFFF',
+      images: [
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
+        'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
+      ]
+    }
+  ];
+
   const productData = {
     ...product,
     description: product.description || `Experience the premium quality of ${product.name}. Crafted with attention to detail and designed for modern lifestyle.`,
@@ -33,12 +82,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
       'Easy care instructions',
       'Satisfaction guaranteed'
     ],
-    images: product.images || [
-      product.image,
-      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
-      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
-      'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600'
-    ],
+    images: colorVariants[selectedColor].images,
     images360: product.images360 || [
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
       'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600',
@@ -290,6 +334,39 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
               </div>
             </div>
 
+            {/* Color Selection */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                Choose Color: <span className="text-indigo-600">{colorVariants[selectedColor].name}</span>
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                {colorVariants.map((color, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setSelectedColor(index);
+                      setSelectedImage(0);
+                      setZoom(1);
+                    }}
+                    className={`flex flex-col items-center space-y-2 transition-all ${
+                      selectedColor === index ? 'opacity-100 scale-105' : 'opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-full border-4 transition-all shadow-md ${
+                        selectedColor === index
+                          ? 'border-indigo-600 ring-2 ring-indigo-300'
+                          : 'border-gray-300 hover:border-indigo-400'
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
+                    />
+                    <span className="text-sm font-medium text-gray-700">{color.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Price */}
             <div className="flex items-center space-x-4">
               <span className="text-3xl font-bold text-indigo-600">
@@ -418,30 +495,40 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onNavigat
               </div>
             </div>
 
-            {/* Additional Information */}
+            {/* Delivery & Warranty Information */}
             <div className="border-t pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3 bg-blue-50 p-3 rounded-lg">
+                  <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Delivery</p>
+                    <p className="text-xs text-gray-600">Get it by Friday, 5 days delivery</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
                   <Truck className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Free Shipping</p>
                     <p className="text-xs text-gray-600">On orders over ₹4000</p>
                   </div>
                 </div>
-                
-                <div className="flex items-center space-x-2">
+
+                <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
                   <RotateCcw className="h-5 w-5 text-blue-600" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Easy Returns</p>
                     <p className="text-xs text-gray-600">30-day return policy</p>
                   </div>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-purple-600" />
+
+                <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
+                  <Shield className="h-5 w-5 text-amber-600" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Warranty</p>
-                    <p className="text-xs text-gray-600">1-year manufacturer warranty</p>
+                    <p className="text-xs text-gray-600">1-year warranty</p>
                   </div>
                 </div>
               </div>
